@@ -1,0 +1,29 @@
+---
+title: "p8105_hw3_wb2366"
+auther: Wenhan Bao
+Date: 2021-10-18
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+## Problem1
+
+**Load the data**
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+```
+
+**How many aisles are there, and which aisles are the most items ordered from?**
+```{r}
+aisle_df = count(instacart, aisle) %>%
+  arrange(desc(n))
+```
+
+**Answer:** According to the result of the chunk above, there are 134 different aisles while fresh vegetables are the most items ordered from.
+

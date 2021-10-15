@@ -28,7 +28,7 @@ aisle_df = count(instacart, aisle) %>%
 **Answer:** According to the result of the chunk above, there are **134** different aisles while **fresh vegetables** are the most items ordered from.
 
 **Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.**
-```{r, fig.width = 7}
+```{r make a plot, fig.width = 7}
 filter(aisle_df, n > 10000) %>%
   mutate(aisle = fct_reorder(aisle, n)) %>%
   ggplot(aes(x = aisle, y = n)) +
@@ -43,5 +43,40 @@ filter(aisle_df, n > 10000) %>%
           axis.text.y = element_text(size = 8)) +
     coord_flip()
 ```
+
+**Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.**
+```{r}
+popular_bak_df = filter(instacart, aisle == "baking ingredients")%>%
+  select(aisle, product_name) %>%
+  group_by(aisle, product_name) %>%
+  tally() %>% 
+  arrange(desc(n)) %>%
+  head(3)
+
+popular_dog_df = filter(instacart, aisle == "dog food care")%>%
+  select(aisle, product_name) %>%
+  group_by(aisle, product_name) %>%
+  tally() %>% 
+  arrange(desc(n)) %>%
+  head(3)
+
+popular_pack_df = filter(instacart, aisle == "packaged vegetables fruits")%>%
+  select(aisle, product_name) %>%
+  group_by(aisle, product_name) %>%
+  tally() %>% 
+  arrange(desc(n)) %>%
+  head(3)
+
+popular_item_df = rbind(popular_pack_df, popular_bak_df, popular_dog_df)
+
+knitr::kable(popular_item_df,
+             caption = "The three most popular items in each of the aisles")
+```
+
+
+
+
+
+
 
 

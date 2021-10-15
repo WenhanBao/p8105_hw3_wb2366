@@ -45,25 +45,25 @@ filter(aisle_df, n > 10000) %>%
 ```
 
 **Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.**
-```{r}
-popular_bak_df = filter(instacart, aisle == "baking ingredients")%>%
+```{r Three most popular items}
+popular_bak_df = filter(instacart, aisle == "baking ingredients") %>%
   select(aisle, product_name) %>%
   group_by(aisle, product_name) %>%
-  tally() %>% 
+  tally() %>%
   arrange(desc(n)) %>%
   head(3)
 
-popular_dog_df = filter(instacart, aisle == "dog food care")%>%
+popular_dog_df = filter(instacart, aisle == "dog food care") %>%
   select(aisle, product_name) %>%
   group_by(aisle, product_name) %>%
-  tally() %>% 
+  tally() %>%
   arrange(desc(n)) %>%
   head(3)
 
-popular_pack_df = filter(instacart, aisle == "packaged vegetables fruits")%>%
+popular_pack_df = filter(instacart, aisle == "packaged vegetables fruits") %>%
   select(aisle, product_name) %>%
   group_by(aisle, product_name) %>%
-  tally() %>% 
+  tally() %>%
   arrange(desc(n)) %>%
   head(3)
 
@@ -73,7 +73,23 @@ knitr::kable(popular_item_df,
              caption = "The three most popular items in each of the aisles")
 ```
 
+**Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).**
+```{r the mean}
+Pink_df = filter(instacart, product_name == "Pink Lady Apple") %>%
+  mutate(mean_order_hour_of_day = round(mean(order_hour_of_day), digits = 2)) %>%
+  select(product_name, aisle, department, mean_order_hour_of_day) %>%
+  distinct()
 
+Coffee_df = filter(instacart, product_name == "Coffee Ice Cream") %>%
+  mutate(mean_order_hour_of_day = round(mean(order_hour_of_day), digits = 2)) %>%
+  select(product_name, aisle, department, mean_order_hour_of_day) %>%
+  distinct()
+
+meanhour_df = rbind(Pink_df, Coffee_df)
+
+knitr::kable(meanhour_df,
+             caption = "The mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered")
+```
 
 
 

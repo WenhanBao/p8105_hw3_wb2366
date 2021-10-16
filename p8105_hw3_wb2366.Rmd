@@ -10,7 +10,6 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-
 ## Problem1
 
 **Load the data**
@@ -91,8 +90,47 @@ knitr::kable(meanhour_df,
              caption = "The mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered")
 ```
 
+## Problem2
 
+**Load the data**
+```{r load data}
+library(httr)
+library(jsonlite)
 
+var_names = 
+  GET("https://chronicdata.cdc.gov/views/acme-vg9e.json") %>%
+  content("text") %>%
+  fromJSON() %>% 
+  .[["columns"]] %>% 
+  .[["name"]] %>% 
+  .[1:22]
 
+brfss_smart2010 = 
+  GET("https://chronicdata.cdc.gov/views/acme-vg9e/rows.json") %>% 
+  content("text") %>%
+  fromJSON() %>% 
+  .[["data"]]
 
+row_as_tibble = function(row_as_list, var_names) {
+  var_list = row_as_list[9:30]
+  names(var_list) = var_names 
+  var_list[sapply(var_list, is.null)] <- NULL
+  as_tibble(var_list, validate = FALSE)
+}
+
+brfss_smart2010 = 
+  brfss_smart2010 %>% 
+  map(.x = ., ~row_as_tibble(.x, var_names)) %>% 
+  bind_rows
+```
+
+**do some data cleaning**
+```{r}
+brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>% 
+  filter(topic == "Overall Health") %>% 
+  mutate(response = fct_relevel(response, c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>%
+  arrange(response)
+  pull(brfss_smart2010, response) %>% 
+  unique()
+```
 

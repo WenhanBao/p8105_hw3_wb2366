@@ -125,7 +125,7 @@ brfss_smart2010 =
 ```
 
 **do some data cleaning**
-```{r}
+```{r clean data}
 brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>% 
   filter(topic == "Overall Health") %>% 
   mutate(response = fct_relevel(response, c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>%
@@ -133,4 +133,21 @@ brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>%
   pull(brfss_smart2010, response) %>% 
   unique()
 ```
+
+**In 2002, which states were observed at 7 or more locations? What about in 2010?**
+```{r}
+brfss_location2002 = filter(brfss_smart2010,year == "2002") %>% 
+  select(c(1,2,3)) %>% 
+  distinct() %>% 
+  count(locationabbr) %>% 
+  filter(n > 7)
+
+brfss_location2010 = filter(brfss_smart2010,year == "2010") %>% 
+  select(c(1,2,3)) %>% 
+  distinct() %>% 
+  count(locationabbr) %>% 
+  filter(n > 7)
+```
+**Answer:** According to the result of chunk above, the three states**(NJ MA PA)** were observed at 7 or more locations in 2002, while the 11 states**(CA FL MA MD NC NE NJ NY OH TX WA)** were observed at 7 or more locations in 2010.
+
 

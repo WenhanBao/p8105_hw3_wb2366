@@ -186,38 +186,69 @@ Accelerometer_data = read_csv("./data/accel_data.csv",
   relocate(weekday_weekend) %>% 
   pivot_longer(
     activity_1:activity_1440,
-    names_to = "activity", 
+    names_to = "activity_minutes",
+    names_prefix = "activity_",
     values_to = "activity_counts") %>% 
-  relocate(week, day_id, day)
+  relocate(week, day_id, day) %>% 
+  mutate(
+    day = as.factor(day),
+    day = fct_relevel(day, 
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" , "Saturday", "Sunday"),
+    weekday_weekend = as.factor(weekday_weekend),
+    activity_minutes = as.numeric(activity_minutes)
+  )
 ```
 **Answer:** 
--Describe the resulting dataset: 
-  -It contains ``r nrow(Accelerometer_data)`` observations with ``r ncol(Accelerometer_data)`` variables which are respectively ``r names(Accelerometer_data)``.
-  -`week`: week for accelerometer data collected on a 63 year-old male
-  -`day_id`: day identifier
-  -`day`: day of the week
-  -`weekday_weekend`: whether weekday or weekend
-  -`activity`: activity identifier for accelerometer data in the day
-  -`acitvity_counts`: numeric value for accelerometer data
+Describe the resulting dataset: 
+
+It contains ``r nrow(Accelerometer_data)`` observations with ``r ncol(Accelerometer_data)`` variables which are respectively ``r names(Accelerometer_data)``.
+
+`week`: week for accelerometer data collected on a 63 year-old male
+
+`day_id`: day identifier
+
+ `day`: day of the week
+
+`weekday_weekend`: whether weekday or weekend
+
+`activity_minutes`: accelerometer measuring data for each minute in the day
+
+`acitvity_counts`: numeric value for accelerometer data
   
 **Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?**
 ```{r}
 Acc_data_total = Accelerometer_data %>%
-  group_by(week, day_id, day, weekday_weekend) %>%
-  summarize(activity_total = round(sum(activity_counts), digits = 2),
-            .groups = "drop")
+  group_by(week, day) %>%
+  summarize(activity_total = sum(activity_counts),
+            .groups = "drop") %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = activity_total
+  )
 
-filter(Acc_data_total, weekday_weekend == "weekday") %>% 
-  pull(activity_total) %>% 
-  mean()
-
-filter(Acc_data_total, weekday_weekend == "weekend") %>% 
-  pull(activity_total) %>% 
-  mean()
+knitr::kable(Acc_data_total,
+             caption = "A total activity accelerometer measuring data for each day")
 ```
 **Answer:** There is a tendency that the accelerometer monitoring data in weekend is much lower than the data in weekday due to less physical activity in weekend.
 
-
-
-
+**Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.**
+```{r}
+ggplot(Accelerometer_data,
+       aes(
+         x = activity_minutes,
+         y = activity_counts,
+         color = day
+       )) +
+  geom_line() +
+  labs(title = "24-hour activity time courses for each day",
+       x = "Time",
+       y = "Activity accelerometer data") +
+  scale_x_continuous(
+    breaks = c(0, 360, 720, 1080, 1440),
+    labels = c("12a.m.", "6a.m.", "12p.m.", "6p.m.", "11:59p.m."),
+    limits = c(0, 1440)
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+**Answer:** According to the graph, we can figure out that the peak of activity for this male is around 12p.m and 7-9p.m.
 

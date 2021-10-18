@@ -200,6 +200,24 @@ Accelerometer_data = read_csv("./data/accel_data.csv",
   -`activity`: activity identifier for accelerometer data in the day
   -`acitvity_counts`: numeric value for accelerometer data
   
+**Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?**
+```{r}
+Acc_data_total = Accelerometer_data %>%
+  group_by(week, day_id, day, weekday_weekend) %>%
+  summarize(activity_total = round(sum(activity_counts), digits = 2),
+            .groups = "drop")
+
+filter(Acc_data_total, weekday_weekend == "weekday") %>% 
+  pull(activity_total) %>% 
+  mean()
+
+filter(Acc_data_total, weekday_weekend == "weekend") %>% 
+  pull(activity_total) %>% 
+  mean()
+```
+**Answer:** There is a tendency that the accelerometer monitoring data in weekend is much lower than the data in weekday due to less physical activity in weekend.
+
+
 
 
 

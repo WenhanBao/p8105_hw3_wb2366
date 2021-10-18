@@ -99,40 +99,10 @@ knitr::kable(week_mean_df,
 
 ## Problem2
 
-**Load the data**
+**Load the data,do some data cleaning**
 ```{r load data}
-library(httr)
-library(jsonlite)
-
-var_names = 
-  GET("https://chronicdata.cdc.gov/views/acme-vg9e.json") %>%
-  content("text") %>%
-  fromJSON() %>% 
-  .[["columns"]] %>% 
-  .[["name"]] %>% 
-  .[1:22]
-
-brfss_smart2010 = 
-  GET("https://chronicdata.cdc.gov/views/acme-vg9e/rows.json") %>% 
-  content("text") %>%
-  fromJSON() %>% 
-  .[["data"]]
-
-row_as_tibble = function(row_as_list, var_names) {
-  var_list = row_as_list[9:30]
-  names(var_list) = var_names 
-  var_list[sapply(var_list, is.null)] <- NULL
-  as_tibble(var_list, validate = FALSE)
-}
-
-brfss_smart2010 = 
-  brfss_smart2010 %>% 
-  map(.x = ., ~row_as_tibble(.x, var_names)) %>% 
-  bind_rows
-```
-
-**do some data cleaning**
-```{r clean data}
+library(p8105.datasets)
+data("brfss_smart2010")
 brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>% 
   filter(topic == "Overall Health") %>% 
   mutate(response = fct_relevel(response, c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>%
@@ -183,7 +153,8 @@ NY_2006_2010 = brfss_smart2010 %>%
   filter(year %in% c(2006, 2010),
          locationabbr == "NY") %>%
   select(year, locationabbr, response, data_value) %>%
-  mutate(data_value = as.numeric(data_value))
+  mutate(data_value = as.numeric(data_value),
+         year = as.character(year)) 
 
 ggplot(NY_2006_2010, aes(x = data_value, color = year)) +
   geom_density() +
@@ -196,6 +167,39 @@ ggplot(NY_2006_2010, aes(x = data_value, color = year)) +
 
 ## Problem3
 
+**Load, tidy, and otherwise wrangle the data.** 
+```{r}
+Accelerometer_data = read_csv("./data/accel_data.csv",
+                              col_types = cols()) %>%
+  janitor::clean_names() %>%
+  mutate(
+    weekday_weekend = case_when(
+      day == "Monday" ~ "weekday",
+      day == "Tuesday" ~ "weekday",
+      day == "Wednesday" ~ "weekday",
+      day == "Thursday" ~ "weekday",
+      day == "Friday" ~ "weekday",
+      day == "Saturday" ~ "weekend",
+      day == "Sunday" ~ "weekend",
+    )
+  ) %>% 
+  relocate(weekday_weekend) %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "activity", 
+    values_to = "activity_counts") %>% 
+  relocate(week, day_id, day)
+```
+**Answer:** 
+-Describe the resulting dataset: 
+  -It contains ``r nrow(Accelerometer_data)`` observations with ``r ncol(Accelerometer_data)`` variables which are respectively ``r names(Accelerometer_data)``.
+  -`week`: week for accelerometer data collected on a 63 year-old male
+  -`day_id`: day identifier
+  -`day`: day of the week
+  -`weekday_weekend`: whether weekday or weekend
+  -`activity`: activity identifier for accelerometer data in the day
+  -`acitvity_counts`: numeric value for accelerometer data
+  
 
 
 

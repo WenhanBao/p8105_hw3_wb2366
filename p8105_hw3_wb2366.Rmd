@@ -5,16 +5,16 @@ Date: 2021-10-20
 output: github_document
 ---
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(ggplot2)
+library(p8105.datasets)
 ```
 
 ## Problem1
 
 **Load the data**
 ```{r load the data}
-library(p8105.datasets)
 data("instacart")
 ```
 
@@ -41,7 +41,7 @@ aisle_df = count(instacart, aisle) %>%
 **Answer:** According to the result of the chunk above, there are **134** different aisles while **fresh vegetables** are the most items ordered from.
 
 **Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.**
-```{r make a plot, fig.width = 7}
+```{r make a plot, fig.height=6, fig.width=10}
 filter(aisle_df, n > 10000) %>%
   mutate(aisle = fct_reorder(aisle, n)) %>%
   ggplot(aes(x = aisle, y = n)) +
@@ -124,6 +124,7 @@ brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>%
   pull(brfss_smart2010, response) %>% 
   unique()
 ```
+
 **In 2002, which states were observed at 7 or more locations? What about in 2010?**
 ```{r}
 brfss_location2002 = filter(brfss_smart2010,year == "2002") %>% 
@@ -143,7 +144,7 @@ brfss_location2010 = filter(brfss_smart2010,year == "2010") %>%
 
 
 **Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state.Make a “spaghetti” plot of this average value over time within a state **
-```{r,fig.width = 7}
+```{r, fig.height=6, fig.width=10}
 brfss_Excellent_df = filter(brfss_smart2010, response == "Excellent") %>%
   drop_na(data_value) %>% 
   select(year, locationabbr, data_value) %>%
@@ -158,25 +159,38 @@ ggplot(data = brfss_Excellent_df, aes(x = year, y = mean_data_vaule, color = loc
   labs(title = "Data value of responses across locations within a state for 2002-2010",
        x = "Year",
        y = "Data value of responses") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 15),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        axis.text.y = element_text(size = 8)) +
+  viridis::scale_color_viridis(
+    name = "states", 
+    discrete = TRUE
+  )
+
 ```
 
 **Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.**
-```{r}
+```{r, fig.height=6, fig.width=10}
 NY_2006_2010 = brfss_smart2010 %>%
   filter(year %in% c(2006, 2010),
          locationabbr == "NY") %>%
   select(year, locationabbr, response, data_value) %>%
   mutate(data_value = as.numeric(data_value),
-         year = as.character(year)) 
+         year = as.character(year)) %>% 
+  group_by(year, response)
 
-ggplot(NY_2006_2010, aes(x = data_value, color = year)) +
+ggplot(NY_2006_2010, aes(x = data_value, fill = response, color = year)) +
   geom_density() +
+  scale_fill_manual(values = alpha(terrain.colors(5), 0.5)) + 
   facet_grid(. ~ year) +
   labs(title = "Distribution of data value of responses for 2006 and 2010 in NY State",
        x = "Data value of responses",
        y = "Density of data value") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  viridis::scale_color_viridis(
+    discrete = TRUE
+  )
 ```
 
 ## Problem3
@@ -247,7 +261,7 @@ knitr::kable(Acc_data_total,
 
 
 **Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.**
-```{r}
+```{r, fig.height=6, fig.width=10}
 ggplot(Accelerometer_data,
        aes(
          x = activity_minutes,

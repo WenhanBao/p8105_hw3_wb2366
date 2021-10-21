@@ -45,17 +45,21 @@ aisle_df = count(instacart, aisle) %>%
 filter(aisle_df, n > 10000) %>%
   mutate(aisle = fct_reorder(aisle, n)) %>%
   ggplot(aes(x = aisle, y = n)) +
-    geom_col(width = .7,
-             position = position_dodge(width = 0.9)) +
-    labs(title = "The number of items ordered in each aisle",
-         x = "Aisle",
-         y = "The number of items") +
-    theme(plot.title = element_text(hjust = 0.5, size = 15),
-          axis.title.x = element_text(size = 12),
-          axis.title.y = element_text(size = 12),
-          axis.text.y = element_text(size = 8)) +
-    coord_flip()
+  geom_col(width = .7,
+           position = position_dodge(width = 0.9)) +
+  labs(title = "The number of items ordered in each aisle",
+       x = "Aisle",
+       y = "The number of items") +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.y = element_text(size = 8)
+  ) +
+  coord_flip()
 ```
+
+According to the plot above, we can figure out that `fresh vegetables` and `fresh fruit` are the two most popular aisles.
 
 **Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.**
 ```{r Three most popular items}
@@ -86,12 +90,18 @@ knitr::kable(popular_item_df,
              caption = "The three most popular items in each of the aisles")
 ```
 
+For the aisle of packaged vegetables fruits, Organic Baby Spinach, Organic Raspberries and Organic Blueberries are the three most popular items.
+
+For the aisle of baking ingredients, Light Brown Sugar, Pure Baking Soda and Cane Sugar are the three most popular items.
+
+For the aisle of dog food care, Snack Sticks Chicken & Rice Recipe Dog Treats, Organix Chicken & Brown Rice Recipe and Small Dog Biscuits are the three most popular items.
+
 **Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).**
 ```{r the mean}
 week_mean_df = instacart %>%
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   select(order_dow, order_hour_of_day, product_name) %>%
-  group_by(product_name, order_dow) %>% 
+  group_by(product_name, order_dow) %>%
   summarize(mean = round(mean(order_hour_of_day), digits = 2), .groups = "drop") %>%
   mutate(
     order_dow = case_when(
@@ -111,62 +121,65 @@ knitr::kable(week_mean_df,
              caption = "The mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered")
 ```
 
+From this table, we can know the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week while there is no different tendency for weekday and weekend.
+
 ## Problem2
 
 **Load the data,do some data cleaning**
 ```{r load data}
 library(p8105.datasets)
 data("brfss_smart2010")
-brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>% 
-  filter(topic == "Overall Health") %>% 
-  mutate(response = fct_relevel(response, c("Poor", "Fair", "Good", "Very good", "Excellent"))) %>%
+brfss_smart2010 = janitor::clean_names(brfss_smart2010) %>%
+  filter(topic == "Overall Health") %>%
+  mutate(response = fct_relevel(response, c(
+    "Poor", "Fair", "Good", "Very good", "Excellent"
+  ))) %>%
   arrange(response)
-  pull(brfss_smart2010, response) %>% 
+pull(brfss_smart2010, response) %>%
   unique()
 ```
 
 **In 2002, which states were observed at 7 or more locations? What about in 2010?**
 ```{r}
-brfss_location2002 = filter(brfss_smart2010,year == "2002") %>% 
-  select(c(1,2,3)) %>% 
-  distinct() %>% 
-  count(locationabbr) %>% 
+brfss_location2002 = filter(brfss_smart2010, year == "2002") %>%
+  select(c(1, 2, 3)) %>%
+  distinct() %>%
+  count(locationabbr) %>%
   filter(n > 6)
 
-brfss_location2010 = filter(brfss_smart2010,year == "2010") %>% 
-  select(c(1,2,3)) %>% 
-  distinct() %>% 
-  count(locationabbr) %>% 
-  filter(n > 6) %>% 
+brfss_location2010 = filter(brfss_smart2010, year == "2010") %>%
+  select(c(1, 2, 3)) %>%
+  distinct() %>%
+  count(locationabbr) %>%
+  filter(n > 6) %>%
   unique()
 ```
 **Answer:** According to the result of chunk above, the ``r nrow(brfss_location2002)`` states ``r unique(pull(brfss_location2002, locationabbr))`` were observed at 7 or more locations in 2002, while the ``r nrow(brfss_location2010)`` states ``r unique(pull(brfss_location2010, locationabbr))`` were observed at 7 or more locations in 2010.
 
 
-**Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state.Make a “spaghetti” plot of this average value over time within a state **
+**Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state.Make a “spaghetti” plot of this average value over time within a state**
 ```{r, fig.height=6, fig.width=10}
 brfss_Excellent_df = filter(brfss_smart2010, response == "Excellent") %>%
-  drop_na(data_value) %>% 
+  drop_na(data_value) %>%
   select(year, locationabbr, data_value) %>%
   group_by(year, locationabbr) %>%
   mutate(data_value = as.numeric(data_value)) %>%
-  summarize(
-    mean_data_vaule = round(mean(data_value), digits = 2),
-    .groups = "drop")
+  summarize(mean_data_vaule = round(mean(data_value), digits = 2),
+            .groups = "drop")
 
-ggplot(data = brfss_Excellent_df, aes(x = year, y = mean_data_vaule, color = locationabbr)) + 
-  geom_line(aes(group = locationabbr)) +    
+ggplot(data = brfss_Excellent_df, aes(x = year, y = mean_data_vaule, color = locationabbr)) +
+  geom_line(aes(group = locationabbr)) +
   labs(title = "Data value of responses across locations within a state for 2002-2010",
        x = "Year",
        y = "Data value of responses") +
-  theme(plot.title = element_text(hjust = 0.5, size = 15),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.text.y = element_text(size = 8)) +
-  viridis::scale_color_viridis(
-    name = "states", 
-    discrete = TRUE
-  )
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.y = element_text(size = 8)
+  ) +
+  viridis::scale_color_viridis(name = "states",
+                               discrete = TRUE)
 
 ```
 
@@ -177,20 +190,18 @@ NY_2006_2010 = brfss_smart2010 %>%
          locationabbr == "NY") %>%
   select(year, locationabbr, response, data_value) %>%
   mutate(data_value = as.numeric(data_value),
-         year = as.character(year)) %>% 
+         year = as.character(year)) %>%
   group_by(year, response)
 
 ggplot(NY_2006_2010, aes(x = data_value, fill = response, color = year)) +
   geom_density() +
-  scale_fill_manual(values = alpha(terrain.colors(5), 0.5)) + 
+  scale_fill_manual(values = alpha(terrain.colors(5), 0.5)) +
   facet_grid(. ~ year) +
   labs(title = "Distribution of data value of responses for 2006 and 2010 in NY State",
        x = "Data value of responses",
        y = "Density of data value") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  viridis::scale_color_viridis(
-    discrete = TRUE
-  )
+  viridis::scale_color_viridis(discrete = TRUE)
 ```
 
 ## Problem3
@@ -210,18 +221,27 @@ Accelerometer_data = read_csv("./data/accel_data.csv",
       day == "Saturday" ~ "weekend",
       day == "Sunday" ~ "weekend",
     )
-  ) %>% 
-  relocate(weekday_weekend) %>% 
+  ) %>%
+  relocate(weekday_weekend) %>%
   pivot_longer(
     activity_1:activity_1440,
     names_to = "activity_minutes",
     names_prefix = "activity_",
-    values_to = "activity_counts") %>% 
-  relocate(week, day_id, day) %>% 
+    values_to = "activity_counts"
+  ) %>%
+  relocate(week, day_id, day) %>%
   mutate(
     day = as.factor(day),
-    day = fct_relevel(day, 
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" , "Saturday", "Sunday"),
+    day = fct_relevel(
+      day,
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday" ,
+      "Saturday",
+      "Sunday"
+    ),
     weekday_weekend = as.factor(weekday_weekend),
     activity_minutes = as.numeric(activity_minutes)
   )
@@ -248,11 +268,9 @@ It contains ``r nrow(Accelerometer_data)`` observations with ``r ncol(Accelerome
 Acc_data_total = Accelerometer_data %>%
   group_by(week, day) %>%
   summarize(activity_total = sum(activity_counts),
-            .groups = "drop") %>% 
-  pivot_wider(
-    names_from = day,
-    values_from = activity_total
-  )
+            .groups = "drop") %>%
+  pivot_wider(names_from = day,
+              values_from = activity_total)
 
 knitr::kable(Acc_data_total,
              caption = "A total activity accelerometer measuring data for each day")
@@ -263,11 +281,9 @@ knitr::kable(Acc_data_total,
 **Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.**
 ```{r, fig.height=6, fig.width=10}
 ggplot(Accelerometer_data,
-       aes(
-         x = activity_minutes,
-         y = activity_counts,
-         color = day
-       )) +
+       aes(x = activity_minutes,
+           y = activity_counts,
+           color = day)) +
   geom_line() +
   labs(title = "24-hour activity time courses for each day",
        x = "Time",
